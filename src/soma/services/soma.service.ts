@@ -28,7 +28,6 @@ export class SomaService {
   @OnEvent('telegram.subscribe')
   async subscribeMentoring(msg: Message) {
     const chatId = msg.chat.id;
-    console.log(chatId);
     this.logger.log(`User #${chatId} Subscribed`);
     const telegramUser = await this.telegramUsersService.getTelegramUser(
       chatId,
