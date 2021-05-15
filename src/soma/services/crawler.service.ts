@@ -39,7 +39,7 @@ export class CrawlerService implements OnModuleInit {
       await dialog.dismiss();
     });
     if (process.env.NODE_ENV !== 'test')
-      setTimeout(this.startCheckingNewMentoringsRoutine, 2000);
+      setTimeout(() => this.startCheckingNewMentoringsRoutine(), 2000);
   }
 
   async startCheckingNewMentoringsRoutine(): Promise<void> {
@@ -76,7 +76,7 @@ export class CrawlerService implements OnModuleInit {
       }
     }
     if (process.env.NODE_ENV !== 'test')
-      setTimeout(this.startCheckingNewMentoringsRoutine, 60 * 1000);
+      setTimeout(() => this.startCheckingNewMentoringsRoutine(), 60 * 1000);
   }
 
   addNewMentoringListener(listener: () => void) {

@@ -10,6 +10,10 @@ export class TelegramUsersService {
     private telegramUsersRepository: Repository<TelegramUser>,
   ) {}
 
+  async getTelegramUser(id: number): Promise<TelegramUser> {
+    return this.telegramUsersRepository.findOne(id);
+  }
+
   async getTelegramUsers(): Promise<TelegramUser[]> {
     return this.telegramUsersRepository.find();
   }
@@ -18,12 +22,12 @@ export class TelegramUsersService {
     return this.telegramUsersRepository.find({ where: { subscribed: true } });
   }
 
-  async create(id: string) {
+  async create(id: number) {
     const telegramUser = await this.telegramUsersRepository.create({ id });
     return this.telegramUsersRepository.save(telegramUser);
   }
 
-  async update(id: string, data: Partial<TelegramUser>) {
+  async update(id: number, data: Partial<TelegramUser>) {
     return this.telegramUsersRepository.update(id, data);
   }
 }
