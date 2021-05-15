@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { AppController } from './app.controller';
@@ -15,6 +16,7 @@ import { SomaModule } from './soma/soma.module';
           .default('development'),
         USERNAME: Joi.string().required(),
         PASSWORD: Joi.string().required(),
+        TELEGRAM_BOT_TOKEN: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRoot({
@@ -24,6 +26,7 @@ import { SomaModule } from './soma/soma.module';
       logging: false,
       autoLoadEntities: true,
     }),
+    EventEmitterModule.forRoot(),
     SomaModule,
   ],
   controllers: [AppController],

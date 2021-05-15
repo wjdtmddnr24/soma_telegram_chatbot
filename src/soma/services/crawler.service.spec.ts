@@ -2,7 +2,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CrawlerService } from './crawler.service';
-import { Mentoring } from './mentoring.entity';
+import { Mentoring } from '../entities/mentoring.entity';
 import { MentoringService } from './mentoring.service';
 
 describe('CrawlerService', () => {

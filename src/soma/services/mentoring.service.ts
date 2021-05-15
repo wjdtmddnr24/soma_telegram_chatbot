@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IMentoring } from 'src/common/interfaces/soma.interface';
 import { Repository } from 'typeorm';
-import { Mentoring } from './mentoring.entity';
+import { Mentoring } from '../entities/mentoring.entity';
 
 @Injectable()
 export class MentoringService {

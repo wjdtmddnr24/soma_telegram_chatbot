@@ -1,10 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { parse } from 'node-html-parser';
 import { Browser, launch, Page, Puppeteer } from 'puppeteer';
-import { IMentoring } from '../common/interfaces/soma.interface';
-import { Lock } from '../common/utils/lock';
+import { IMentoring } from '../../common/interfaces/soma.interface';
+import { Lock } from '../../common/utils/lock';
 import { promisify } from 'util';
 import { MentoringService } from './mentoring.service';
+import { EventEmitter2 } from 'eventemitter2';
 
 @Injectable()
 export class CrawlerService implements OnModuleInit {
@@ -13,8 +14,10 @@ export class CrawlerService implements OnModuleInit {
   private readonly lock: Lock = new Lock();
   private loggedIn = false;
   private readonly sleepPromise = promisify(setTimeout);
-
-  constructor(private readonly mentoringsService: MentoringService) {}
+  constructor(
+    private readonly mentoringsService: MentoringService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     return this.initialize();
@@ -69,11 +72,15 @@ export class CrawlerService implements OnModuleInit {
         newMentoring.mentoringLocation = mentoringLocation;
         await this.mentoringsService.create(newMentoring);
         await this.sleepPromise(400);
-        // eventEmitter.emit('new_mentoring', newMentoring);
+        this.eventEmitter.emit('new_mentoring', newMentoring);
       }
     }
     if (process.env.NODE_ENV !== 'test')
       setTimeout(this.startCheckingNewMentoringsRoutine, 60 * 1000);
+  }
+
+  addNewMentoringListener(listener: () => void) {
+    this.eventEmitter.on('new_mentoring', listener);
   }
 
   async fetchMentoringDetails(

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IMentoring } from 'src/common/interfaces/soma.interface';
-import { Mentoring } from './mentoring.entity';
+import { Mentoring } from '../entities/mentoring.entity';
 import { MentoringService } from './mentoring.service';
 
 describe('MentoringService', () => {

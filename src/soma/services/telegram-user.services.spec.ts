@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SomaService } from './soma.service';
+import { TelegramUsersService } from './telegram-user.services';
 
-describe('SomaService', () => {
-  let service: SomaService;
+describe('TelegramUserService', () => {
+  let service: TelegramUsersService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SomaService],
+      providers: [TelegramUsersService],
     }).compile();
 
-    service = module.get<SomaService>(SomaService);
+    service = module.get<TelegramUsersService>(TelegramUsersService);
   });
 
   it('should be defined', () => {
