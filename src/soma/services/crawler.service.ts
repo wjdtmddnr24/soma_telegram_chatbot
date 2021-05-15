@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { parse } from 'node-html-parser';
 import { Browser, launch, Page, Puppeteer } from 'puppeteer';
 import { IMentoring } from '../../common/interfaces/soma.interface';
@@ -14,6 +14,8 @@ export class CrawlerService implements OnModuleInit {
   private readonly lock: Lock = new Lock();
   private loggedIn = false;
   private readonly sleepPromise = promisify(setTimeout);
+  private readonly logger = new Logger(CrawlerService.name);
+
   constructor(
     private readonly mentoringsService: MentoringService,
     private readonly eventEmitter: EventEmitter2,
@@ -24,6 +26,7 @@ export class CrawlerService implements OnModuleInit {
   }
 
   async initialize(): Promise<void> {
+    this.logger.log(`Initializing Crawler`);
     this.browser = await launch({
       ignoreHTTPSErrors: true,
       headless: true,
@@ -34,15 +37,18 @@ export class CrawlerService implements OnModuleInit {
     this.page.on('dialog', async (dialog) => {
       const _message: string = dialog.message() || '';
       if (_message.startsWith('로그인이 필요한 페이지입니다.')) {
+        this.logger.log(`Require Login`);
         this.loggedIn = false;
       }
       await dialog.dismiss();
     });
     if (process.env.NODE_ENV !== 'test')
       setTimeout(() => this.startCheckingNewMentoringsRoutine(), 2000);
+    this.logger.log(`Initialize Complete`);
   }
 
   async startCheckingNewMentoringsRoutine(): Promise<void> {
+    this.logger.log(`Checking for new mentorings`);
     const rescentLocalMentoring =
       (await this.mentoringsService.getMostRecentMentoring()) || { id: 0 };
     const rescentOnlineMentoring = (await this.fetchMentorings())[0];
@@ -51,11 +57,10 @@ export class CrawlerService implements OnModuleInit {
       rescentLocalMentoring &&
       rescentOnlineMentoring.id > rescentLocalMentoring.id
     ) {
-      console.log('New mentoring exist');
+      this.logger.log(`New mentorings Exists`);
       const newMentorings: IMentoring[] = [];
       let i = 1;
       while (true) {
-        console.log(i);
         const mentorings = await this.fetchMentorings(i++);
         const newMentoringsPartial = mentorings.filter(
           (m) => m.id > rescentLocalMentoring.id,
@@ -63,8 +68,8 @@ export class CrawlerService implements OnModuleInit {
         if (newMentoringsPartial.length === 0) break;
         newMentoringsPartial.forEach((m) => newMentorings.push(m));
       }
-      console.log(`new: ${newMentorings.length}`);
       for (const newMentoring of newMentorings) {
+        this.logger.log(`New mentoring #${newMentoring.id}`);
         const { content, mentoringLocation } = await this.fetchMentoringDetails(
           newMentoring.id,
         );
@@ -74,18 +79,17 @@ export class CrawlerService implements OnModuleInit {
         await this.sleepPromise(400);
         this.eventEmitter.emit('new_mentoring', newMentoring);
       }
+    } else {
+      this.logger.log(`No New Mentorings`);
     }
     if (process.env.NODE_ENV !== 'test')
       setTimeout(() => this.startCheckingNewMentoringsRoutine(), 60 * 1000);
   }
 
-  addNewMentoringListener(listener: () => void) {
-    this.eventEmitter.on('new_mentoring', listener);
-  }
-
   async fetchMentoringDetails(
     id: number,
   ): Promise<{ mentoringLocation: string; content: string }> {
+    this.logger.log(`Fetching Mentoring #${id} Details`);
     const html: string = await this.getHtml(
       `https://www.swmaestro.org/sw/mypage/mentoLec/view.do?qustnrSn=${id}&menuNo=200046`,
     );
@@ -97,6 +101,7 @@ export class CrawlerService implements OnModuleInit {
   }
 
   async fetchAllMentorings(): Promise<IMentoring[]> {
+    this.logger.log(`Fetching All Mentorings`);
     const retMentorings: IMentoring[] = [];
     let i = 1;
     while (true) {
@@ -111,6 +116,7 @@ export class CrawlerService implements OnModuleInit {
   }
 
   async fetchMentorings(pageIndex = 1): Promise<IMentoring[]> {
+    this.logger.log(`Fetching Mentoring page #${pageIndex}`);
     if (pageIndex <= 0) pageIndex = 0;
     const html: string = await this.getHtml(
       `https://www.swmaestro.org/sw/mypage/mentoLec/list.do?menuNo=200046&pageIndex=${pageIndex}`,
@@ -160,6 +166,7 @@ export class CrawlerService implements OnModuleInit {
   }
 
   private async getHtml(url: string): Promise<string> {
+    this.logger.log(`Getting Html`);
     await this.lock.acquire();
     this.loggedIn = true;
     let res = await this.page.goto(url);
@@ -173,16 +180,21 @@ export class CrawlerService implements OnModuleInit {
   }
 
   private async isLoggedIn(): Promise<boolean> {
+    this.logger.log(`Checking Logged In`);
     const res = await this.page.goto(
       'https://www.swmaestro.org/sw/main/main.do',
     );
     const html = await res.text();
     const root = parse(html);
     const loginButton = root.querySelector('button.log_new');
-    return loginButton?.getAttribute('title') === '로그아웃';
+    const result = loginButton?.getAttribute('title') === '로그아웃';
+    if (result) this.logger.log(`Logged In`);
+    else this.logger.log(`Require Login`);
+    return result;
   }
 
   private async login(): Promise<boolean> {
+    this.logger.log(`Attempting Login`);
     await this.page.goto(
       'https://www.swmaestro.org/sw/member/user/forLogin.do?menuNo=200025',
     );

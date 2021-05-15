@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Message } from 'node-telegram-bot-api';
 import { IMentoring } from 'src/common/interfaces/soma.interface';
@@ -7,6 +7,8 @@ import { TelegramUsersService } from './telegram-user.services';
 import { TelegramService } from './telegram.service';
 @Injectable()
 export class SomaService {
+  private readonly logger = new Logger(SomaService.name);
+
   constructor(
     private readonly telegramUsersService: TelegramUsersService,
     private readonly telegramService: TelegramService,
@@ -14,6 +16,8 @@ export class SomaService {
 
   @OnEvent('new_mentoring', { async: true })
   async handleNewMentoring(mentoring: IMentoring): Promise<void> {
+    this.logger.log(`New Mentoring #${mentoring.id}`);
+
     const telegramUsers =
       await this.telegramUsersService.getSubscribedTelegramUsers();
     for (const telegramUser of telegramUsers) {
@@ -24,6 +28,8 @@ export class SomaService {
   @OnEvent('telegram.subscribe')
   async subscribeMentoring(msg: Message) {
     const chatId = msg.chat.id;
+    console.log(chatId);
+    this.logger.log(`User #${chatId} Subscribed`);
     const telegramUser = await this.telegramUsersService.getTelegramUser(
       chatId,
     );
@@ -38,9 +44,10 @@ export class SomaService {
     return this.telegramService.sendMessage(chatId, 'Subscribed!');
   }
 
-  @OnEvent('telegram.unSubscribe')
+  @OnEvent('telegram.unsubscribe')
   async unSubscribeMentoring(msg: Message) {
     const chatId = msg.chat.id;
+    this.logger.log(`User #${chatId} Unsubscribed`);
     const telegramUser = await this.telegramUsersService.getTelegramUser(
       chatId,
     );
