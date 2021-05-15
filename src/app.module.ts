@@ -21,7 +21,7 @@ import { SomaModule } from './soma/soma.module';
     }),
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: 'database.db',
+      database: 'data/database.db',
       synchronize: true,
       logging: false,
       autoLoadEntities: true,
