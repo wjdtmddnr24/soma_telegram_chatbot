@@ -9,6 +9,10 @@ export class TelegramService {
   });
 
   constructor(private eventEmitter: EventEmitter2) {
+    this.bot.setMyCommands([
+      { command: '/subscribe', description: '신규 멘토링 알림 등록하기' },
+      { command: '/unsubscribe', description: '신규 멘토링 알림 해제하기' },
+    ]);
     this.bot.onText(/\/subscribe/, (msg) =>
       eventEmitter.emit('telegram.subscribe', msg),
     );
@@ -22,7 +26,11 @@ export class TelegramService {
     return this.bot.getMe();
   }
 
-  async sendMessage(chatId: number, text: string) {
-    return this.bot.sendMessage(chatId, text);
+  async sendMessage(
+    chatId: number,
+    text: string,
+    options?: TelegramBot.SendMessageOptions,
+  ) {
+    return this.bot.sendMessage(chatId, text, options);
   }
 }
