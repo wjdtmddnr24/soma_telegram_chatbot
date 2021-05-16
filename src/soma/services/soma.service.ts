@@ -21,7 +21,17 @@ export class SomaService {
     const telegramUsers =
       await this.telegramUsersService.getSubscribedTelegramUsers();
     for (const telegramUser of telegramUsers) {
-      await this.telegramService.sendMessage(telegramUser.id, mentoring.title);
+      await this.telegramService.sendMessage(
+        telegramUser.id,
+        `<b>${mentoring.title}</b>\n\n멘토: ${mentoring.writer}\n장소: ${
+          mentoring.mentoringLocation
+        }\n특강일: ${mentoring.mentoringDate.getFullYear()}-${
+          mentoring.mentoringDate.getMonth() + 1
+        }-${mentoring.mentoringDate.getDate()}\n\nhttps://www.swmaestro.org/sw/mypage/mentoLec/view.do?qustnrSn=${
+          mentoring.id
+        }&menuNo=200046`,
+        { parse_mode: 'HTML' },
+      );
     }
   }
 
